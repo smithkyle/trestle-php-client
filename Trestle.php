@@ -51,6 +51,9 @@ class Trestle
      */
     public function __construct($api_key = null, $api_secret = null)
     {
+        if (!function_exists('curl_init')) {
+            trigger_error('error: PHP curl support is required for Trestle',E_USER_ERROR);
+        }
         self::$__api_key    = $api_key;
         self::$__api_secret = $api_secret;
     }
