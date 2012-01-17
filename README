@@ -3,7 +3,7 @@ gives you access to the power of Trestle with minimal fuss:
 
 Example usage:
 
-```
+```php
 require_once 'Trestle.php';
 
 $trestle = new Trestle('api_key','api_secret');
