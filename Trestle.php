@@ -39,7 +39,8 @@ class Trestle
     private static $__api_secret = null; // Trestle API Secret
 
     // Endpoints
-    public static $user_service_url = 'https://www.trestleapp.com/v1/user';
+    public static $user_service_url   = 'https://www.trestleapp.com/v1/user';
+    public static $object_service_url = 'https://www.trestleapp.com/v1/object';
 
     /**
      * Constructor
@@ -66,6 +67,9 @@ class Trestle
      */
     public function UserCreate(&$_args)
     {
+        if (!isset($_args['password']{0})) {
+            return 'error: password required';
+        }
         $tmp = $this->_request(self::$user_service_url,'POST',$_args);
         return $tmp;
     }
@@ -114,6 +118,72 @@ class Trestle
     {
         return $this->_request(self::$user_service_url,'GET',$_args);
     }
+
+    //-------------------------------
+    // Object Service
+    //-------------------------------
+
+    /**
+     * ObjectCreate - create a new object in the Object Service
+     *
+     * @param string Collection
+     * @param array Object Creation parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function ObjectCreate($collection,&$_args)
+    {
+        $tmp = $this->_request(self::$object_service_url ."/{$collection}",'POST',$_args);
+        return $tmp;
+    }
+
+    /**
+     * ObjectUpdate - update an existing object account in the Object Service
+     *
+     * @param string Collection
+     * @param string Object ID
+     * @param array Object Creation parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function ObjectUpdate($collection,$object_id,&$_args)
+    {
+        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'PUT',$_args);
+    }
+
+    /**
+     * ObjectDelete - delete an existing object from the Object Service
+     *
+     * @param string Collection
+     * @param string Object ID
+     * @return mixed array on success, error message on failure
+     */
+    public function ObjectDelete($object_id)
+    {
+        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'DELETE');
+    }
+
+    /**
+     * ObjectInfo - get info about specific object
+     *
+     * @param string Collection
+     * @param string Object ID
+     * @return mixed array on success, error message on failure
+     */
+    public function ObjectInfo($object_id)
+    {
+        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'GET');
+    }
+
+    /**
+     * ObjectSearch - Search object accounts
+     *
+     * @param array Match parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function ObjectSearch(&$_args)
+    {
+        return $this->_request(self::$object_service_url ."/{$collection}",'GET',$_args);
+    }
+
 
     //-------------------------------
     // Helper functions
