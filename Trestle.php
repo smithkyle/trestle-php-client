@@ -73,6 +73,7 @@ class Trestle
     /**
      * UserUpdate - update an existing user account in the User Service
      *
+     * @param string User ID
      * @param array Account Creation parameters
      * @return mixed array on success, error message on failure
      */
@@ -84,12 +85,34 @@ class Trestle
     /**
      * UserDelete - delete an existing user from the User Service
      *
-     * @param array Account Creation parameters
+     * @param string User ID
      * @return mixed array on success, error message on failure
      */
     public function UserDelete($user_id)
     {
         return $this->_request(self::$user_service_url ."/{$user_id}",'DELETE');
+    }
+
+    /**
+     * UserInfo - get info about specific user account
+     *
+     * @param string User ID
+     * @return mixed array on success, error message on failure
+     */
+    public function UserInfo($user_id)
+    {
+        return $this->_request(self::$user_service_url ."/{$user_id}",'GET');
+    }
+
+    /**
+     * UserSearch - Search user accounts
+     *
+     * @param array Match parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function UserSearch(&$_args)
+    {
+        return $this->_request(self::$user_service_url,'GET',$_args);
     }
 
     //-------------------------------
