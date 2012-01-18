@@ -34,15 +34,27 @@
  */
 class Trestle
 {
-    // Credentials
-    private static $__api_key     = null;   // Trestle API Key
-    private static $__api_secret  = null;   // Trestle API Secret
-    private static $__return_type = 'json'; // Default return type
-
     // Endpoints
-    public static $user_service_url   = 'https://www.trestleapp.com/v1/user';
-    public static $object_service_url = 'https://www.trestleapp.com/v1/object';
-    public static $geo_service_url    = 'https://www.trestleapp.com/v1/geo';
+    public $audio_service_url   = 'https://www.trestleapp.com/v1/audio';
+    public $email_service_url   = 'https://www.trestleapp.com/v1/email';
+    public $geo_service_url     = 'https://www.trestleapp.com/v1/geo';
+    public $image_service_url   = 'https://www.trestleapp.com/v1/image';
+    public $job_service_url     = 'https://www.trestleapp.com/v1/job';
+    public $mailbox_service_url = 'https://www.trestleapp.com/v1/mailbox';
+    public $object_service_url  = 'https://www.trestleapp.com/v1/object';
+    public $s3_service_url      = 'https://www.trestleapp.com/v1/s3';
+    public $stat_service_url    = 'https://www.trestleapp.com/v1/stat';
+    public $user_service_url    = 'https://www.trestleapp.com/v1/user';
+
+    // Error bucket
+    public $errors              = false;
+
+    // Credentials
+    private $__api_key          = null;
+    private $__api_secret       = null;
+
+    // default return format from methods
+    private $__return_type      = 'array';
 
     /**
      * Constructor
@@ -56,98 +68,337 @@ class Trestle
         if (!function_exists('curl_init')) {
             trigger_error('error: PHP cURL support is required for Trestle',E_USER_ERROR);
         }
-        self::$__api_key    = $api_key;
-        self::$__api_secret = $api_secret;
+        $this->__api_key    = $api_key;
+        $this->__api_secret = $api_secret;
     }
 
     //-------------------------------
-    // USER Service
+    // AUDIO service
     //-------------------------------
-
     /**
-     * UserCreate - create a new user in the User Service
+     * AudioMasterCreate - create a new Master Audio file
      *
-     * @param array Account Creation parameters
-     * @return mixed array on success, error message on failure
+     * @param array Master Audio file metadata
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserCreate(&$_args)
+    public function AudioMasterCreate(&$_args)
     {
-        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
-            return 'error: username and/or email required';
+        if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
+            $this->SetError('error: audio file is required');
+            return false;
         }
-        if (!isset($_args['password']{0})) {
-            return 'error: password required';
+        if (!isset($_args['storage']{0})) {
+            $this->SetError('error: storage parameter required');
+            return false;
         }
-        $tmp = $this->_request(self::$user_service_url,'POST',$_args);
-        return $tmp;
+        return $this->_request($this->audio_service_url,'POST',$_args);
     }
 
     /**
-     * UserUpdate - update an existing user account in the User Service
+     * AudioMixCreate - create a new Mix from a Master Audio file
      *
-     * @param string User ID
-     * @param array Account Creation parameters
-     * @return mixed array on success, error message on failure
+     * @param string Master ID to create mix from
+     * @param array Audio Mix Metadata
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserUpdate($user_id,&$_args)
+    public function AudioMixCreate($id,&$_args)
     {
-        return $this->_request(self::$user_service_url ."/{$user_id}",'PUT',$_args);
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->audio_service_url ."/{$id}",'POST',$_args);
     }
 
     /**
-     * UserDelete - delete an existing user from the User Service
+     * AudioUpdate - Update meta information about an existing Master Audio file or Audio Mix
      *
-     * @param string User ID
-     * @return mixed array on success, error message on failure
+     * @param string ID to update
+     * @param array Metadata to save
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserDelete($user_id)
+    public function AudioUpdate($id,&$_args)
     {
-        return $this->_request(self::$user_service_url ."/{$user_id}",'DELETE');
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->audio_service_url ."/{$id}",'PUT',$_args);
     }
 
     /**
-     * UserInfo - get info about specific user account
+     * AudioInfo - Information about a Master Audio file or Audio Mix
      *
-     * @param string User ID
-     * @return mixed array on success, error message on failure
+     * @param string ID to get info about
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserInfo($user_id)
+    public function AudioInfo($id)
     {
-        return $this->_request(self::$user_service_url ."/{$user_id}",'GET');
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->audio_service_url ."/{$id}",'GET');
     }
 
     /**
-     * UserSearch - Search user accounts
+     * AudioList - list audio objects based on match parameters
      *
-     * @param array Match parameters
-     * @return mixed array on success, error message on failure
+     * @param array List/Match parameters
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserSearch(&$_args)
+    public function AudioList(&$_args)
     {
-        return $this->_request(self::$user_service_url,'GET',$_args);
+        return $this->_request($this->audio_service_url,'GET');
     }
 
     /**
-     * UserLogin - login a user account
+     * AudioDelete - Delete a Master Audio file or Audio Mix
      *
-     * @param string User ID
-     * @return mixed array on success, error message on failure
+     * @param string ID to delete
+     * @return string|array|object on success, bool false on failure
      */
-    public function UserLogin(&$_args)
+    public function AudioDelete($id)
     {
-        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
-            return 'error: username and/or email required';
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->audio_service_url ."/{$id}",'DELETE');
+    }
+
+
+    //-------------------------------
+    // EMAIL Service
+    //-------------------------------
+    /**
+     * EmailSend - send an email through the mailer service
+     *
+     * @param string IP Address or Hostname
+     * @return string|array|object on success, bool false on failure
+     */
+    public function EmailSend(&$_args)
+    {
+        if (!isset($_args['to']{0}) || !filter_var($_args['to'],FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid To Email Address');
+            return false;
         }
-        if (!isset($_args['password']{0})) {
-            return 'error: password required';
+        if (!isset($_args['subject']{0})) {
+            $this->SetError('error: Email subject required');
+            return false;
         }
-        return $this->_request(self::$user_service_url .'/login','GET');
+        if (!isset($_args['message']{0})) {
+            $this->SetError('error: Email message required');
+            return false;
+        }
+        if (isset($_args['from']{0}) || !filter_var($_args['from'],FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid From Email Address');
+            return false;
+        }
+        return $this->_request($this->email_service_url,'POST',$_args);
     }
+
+
+    //-------------------------------
+    // GEO Service
+    //-------------------------------
+    /**
+     * GeoInfo - get info about specific ip/hostname
+     *
+     * @param string IP Address or Hostname
+     * @return string|array|object on success, bool false on failure
+     */
+    public function GeoInfo($ip)
+    {
+        return $this->_request($this->geo_service_url ."/{$ip}",'GET');
+    }
+
+
+    //-------------------------------
+    // IMAGE service
+    //-------------------------------
+    /**
+     * ImageMasterCreate - create a new Master Image file
+     *
+     * @param array Master Image file metadata
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageMasterCreate(&$_args)
+    {
+        if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
+            $this->SetError('error: image file is required');
+            return false;
+        }
+        if (!isset($_args['storage']{0})) {
+            $this->SetError('error: storage parameter required');
+            return false;
+        }
+        return $this->_request($this->image_service_url,'POST',$_args);
+    }
+
+    /**
+     * ImageThumbCreate - create a new Thumbnail from a Master Image file
+     *
+     * @param string Master ID to create thumb from
+     * @param array Image Thumbnail Metadata
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageThumbCreate($id,&$_args)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->image_service_url ."/{$id}",'POST',$_args);
+    }
+
+    /**
+     * ImageUpdate - Update meta information about an existing Master Image file or Image Thumbnail
+     *
+     * @param string ID to update
+     * @param array Metadata to save
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageUpdate($id,&$_args)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->image_service_url ."/{$id}",'PUT',$_args);
+    }
+
+    /**
+     * ImageInfo - Information about a Master Image file or Image Thumbnail
+     *
+     * @param string ID to get info about
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageInfo($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->image_service_url ."/{$id}",'GET');
+    }
+
+    /**
+     * ImageList - list image objects based on match parameters
+     *
+     * @param array List/Match parameters
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageList(&$_args)
+    {
+        return $this->_request($this->image_service_url,'GET');
+    }
+
+    /**
+     * ImageDelete - Delete a Master Image file or Image Thumbnail
+     *
+     * @param string ID to delete
+     * @return string|array|object on success, bool false on failure
+     */
+    public function ImageDelete($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->image_service_url ."/{$id}",'DELETE');
+    }
+
+
+    //-------------------------------
+    // JOB Service
+    //-------------------------------
+    /**
+     * JobInfo - get info about a specific media conversion job
+     *
+     * @param string Job ID
+     * @return string|array|object on success, bool false on failure
+     */
+    public function JobInfo($id)
+    {
+        return $this->_request($this->job_service_url ."/{$id}",'GET');
+    }
+
+    /**
+     * JobList - list jobs
+     *
+     * @param array List parameters
+     * @return string|array|object on success, bool false on failure
+     */
+    public function JobList(&$_args)
+    {
+        return $this->_request($this->job_service_url,'GET',$_args);
+    }
+
+
+    //-------------------------------
+    // MAILBOX Service
+    //-------------------------------
+    /**
+     * MailboxCreate - create a new IMAP/POP3 mailbox
+     *
+     * @param array Mailbox parameters
+     * @return string|array|object on success, bool false on failure
+     */
+    public function MailboxCreate(&$_args)
+    {
+        if (!isset($_args['mailbox']{0}) || !filter_var($_args['mailbox'],FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid mailbox Email Address');
+            return false;
+        }
+        if (!isset($_args['password']{2})) {
+            $this->SetError('error: invalid mailbox password - must be at least 3 characters');
+            return false;
+        }
+        return $this->_request($this->mailbox_service_url,'POST',$_args);
+    }
+
+    /**
+     * MailboxInfo - get information about specific mailbox
+     *
+     * @param string Mailbox email address
+     * @return string|array|object on success, bool false on failure
+     */
+    public function MailboxInfo($mailbox)
+    {
+        if (!isset($mailbox{0}) || !filter_var($mailbox,FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid mailbox Email Address');
+            return false;
+        }
+        return $this->_request($this->mailbox_service_url ."/{$mailbox}",'GET');
+    }
+
+    /**
+     * MailboxList - list all mailboxes in App Domain
+     *
+     * @param array Match/List parameters
+     * @return string|array|object on success, bool false on failure
+     */
+    public function MailboxList($_args = false)
+    {
+        return $this->_request($this->mailbox_service_url,'GET',$_args);
+    }
+
+    /**
+     * MailboxUpdate - set password or forwarding address for a mailbox
+     *
+     * @param string Mailbox email address
+     * @param array mailbox info to update
+     * @return string|array|object on success, bool false on failure
+     */
+    public function MailboxUpdate($mailbox,&$_args)
+    {
+        if (!isset($mailbox{0}) || !filter_var($mailbox,FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid mailbox Email Address');
+            return false;
+        }
+        if (isset($_args['password']) && !isset($_args['password']{2})) {
+            $this->SetError('error: invalid mailbox password - must be at least 3 characters');
+            return false;
+        }
+        if (isset($_args['forward']) && !filter_var($_args['forward'],FILTER_VALIDATE_EMAIL)) {
+            $this->SetError('error: invalid forward Email Address');
+            return false;
+        }
+        return $this->_request($this->mailbox_service_url ."/{$mailbox}",'PUT',$_args);
+    }
+
+    /**
+     * MailboxDelete - delete a mailbox from the App Domain
+     *
+     * @param string Mailbox email address
+     * @return string|array|object on success, bool false on failure
+     */
+    public function MailboxDelete($mailbox)
+    {
+        return $this->_request($this->mailbox_service_url ."/{$mailbox}",'DELETE');
+    }
+
 
     //-------------------------------
     // Object Service
     //-------------------------------
-
     /**
      * ObjectCreate - create a new object in the Object Service
      *
@@ -157,7 +408,7 @@ class Trestle
      */
     public function ObjectCreate($collection,&$_args)
     {
-        $tmp = $this->_request(self::$object_service_url ."/{$collection}",'POST',$_args);
+        $tmp = $this->_request($this->object_service_url ."/{$collection}",'POST',$_args);
         return $tmp;
     }
 
@@ -169,9 +420,10 @@ class Trestle
      * @param array Object Creation parameters
      * @return mixed array on success, error message on failure
      */
-    public function ObjectUpdate($collection,$object_id,&$_args)
+    public function ObjectUpdate($collection,$id,&$_args)
     {
-        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'PUT',$_args);
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->object_service_url ."/{$collection}/{$id}",'PUT',$_args);
     }
 
     /**
@@ -181,9 +433,10 @@ class Trestle
      * @param string Object ID
      * @return mixed array on success, error message on failure
      */
-    public function ObjectDelete($collection,$object_id)
+    public function ObjectDelete($collection,$id)
     {
-        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'DELETE');
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->object_service_url ."/{$collection}/{$id}",'DELETE');
     }
 
     /**
@@ -193,9 +446,10 @@ class Trestle
      * @param string Object ID
      * @return mixed array on success, error message on failure
      */
-    public function ObjectInfo($collection,$object_id)
+    public function ObjectInfo($collection,$id)
     {
-        return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'GET');
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->object_service_url ."/{$collection}/{$id}",'GET');
     }
 
     /**
@@ -207,22 +461,206 @@ class Trestle
      */
     public function ObjectSearch($collection,&$_args)
     {
-        return $this->_request(self::$object_service_url ."/{$collection}",'GET',$_args);
+        return $this->_request($this->object_service_url ."/{$collection}",'GET',$_args);
     }
 
+
     //-------------------------------
-    // Geo Service
+    // S3 service
     //-------------------------------
+    /**
+     * S3Create - upload a new file to S3 storage
+     *
+     * @param array S3 Thumbnail Metadata
+     * @return string|array|object on success, bool false on failure
+     */
+    public function S3Create(&$_args)
+    {
+        if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
+            $this->SetError('error: file is required');
+            return false;
+        }
+        return $this->_request($this->s3_service_url,'POST',$_args);
+    }
 
     /**
-     * GeoInfo - get info about specific ip/hostname
+     * S3Update - Update meta information about an existing S3 file
+     *
+     * @param string ID to update
+     * @param array Metadata to save
+     * @return string|array|object on success, bool false on failure
+     */
+    public function S3Update($id,&$_args)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->s3_service_url ."/{$id}",'PUT',$_args);
+    }
+
+    /**
+     * S3Info - Information about an S3 file
+     *
+     * @param string ID to get info about
+     * @return string|array|object on success, bool false on failure
+     */
+    public function S3Info($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->s3_service_url ."/{$id}",'GET');
+    }
+
+    /**
+     * S3List - list s3 objects based on match parameters
+     *
+     * @param array List/Match parameters
+     * @return string|array|object on success, bool false on failure
+     */
+    public function S3List(&$_args)
+    {
+        return $this->_request($this->s3_service_url,'GET');
+    }
+
+    /**
+     * S3Delete - Delete a Master S3 file or S3 Thumbnail
+     *
+     * @param string ID to delete
+     * @return string|array|object on success, bool false on failure
+     */
+    public function S3Delete($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->s3_service_url ."/{$id}",'DELETE');
+    }
+
+
+    //-------------------------------
+    // STAT Service
+    //-------------------------------
+    /**
+     * StatInfo - get services statistics for Trestle App
      *
      * @param string IP Address or Hostname
+     * @return string|array|object on success, bool false on failure
+     */
+    public function StatInfo($service,&$_args = false)
+    {
+        return $this->_request($this->stat_service_url ."/{$service}",'GET',$_args);
+    }
+
+
+    //-------------------------------
+    // USER Service
+    //-------------------------------
+    /**
+     * UserCreate - create a new user in the User Service
+     *
+     * @param array Account Creation parameters
      * @return mixed array on success, error message on failure
      */
-    public function GeoInfo($ip)
+    public function UserCreate(&$_args)
     {
-        return $this->_request(self::$geo_service_url ."/{$ip}",'GET');
+        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
+            $this->SetError('error: username and/or email required');
+            return false;
+        }
+        if (!isset($_args['password']{0})) {
+            $this->SetError('error: password required');
+            return false;
+        }
+        return $this->_request($this->user_service_url,'POST',$_args);
+    }
+
+    /**
+     * UserUpdate - update an existing user account in the User Service
+     *
+     * @param string User ID
+     * @param array Account Creation parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function UserUpdate($id,&$_args)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->user_service_url ."/{$id}",'PUT',$_args);
+    }
+
+    /**
+     * UserDelete - delete an existing user from the User Service
+     *
+     * @param string User ID
+     * @return mixed array on success, error message on failure
+     */
+    public function UserDelete($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->user_service_url ."/{$id}",'DELETE');
+    }
+
+    /**
+     * UserInfo - get info about specific user account
+     *
+     * @param string User ID
+     * @return mixed array on success, error message on failure
+     */
+    public function UserInfo($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->user_service_url ."/{$id}",'GET');
+    }
+
+    /**
+     * UserSearch - Search user accounts
+     *
+     * @param array Match parameters
+     * @return mixed array on success, error message on failure
+     */
+    public function UserSearch(&$_args)
+    {
+        return $this->_request($this->user_service_url,'GET',$_args);
+    }
+
+    /**
+     * UserLogin - login a user account
+     *
+     * @param array User info
+     * @return mixed array on success, error message on failure
+     */
+    public function UserLogin(&$_args)
+    {
+        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
+            $this->SetError('error: username and/or email required');
+            return false;
+        }
+        if (!isset($_args['password']{0})) {
+            $this->SetError('error: password required');
+            return false;
+        }
+        return $this->_request($this->user_service_url .'/login','GET');
+    }
+
+    /**
+     * UserForgot - Initiate forgot login process for user
+     *
+     * @param array User info
+     * @return mixed array on success, error message on failure
+     */
+    public function UserForgot(&$_args)
+    {
+        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
+            $this->SetError('error: username and/or email required');
+            return false;
+        }
+        return $this->_request($this->user_service_url .'/forgot','POST');
+    }
+
+    /**
+     * UserResend - Resend the forgot login email to a user
+     *
+     * @param string User ID
+     * @return mixed array on success, error message on failure
+     */
+    public function UserResend($id)
+    {
+        if (!$this->_check_id($id)) { return false; }
+        return $this->_request($this->user_service_url ."/{$id}/resend",'POST');
     }
 
 
@@ -238,7 +676,39 @@ class Trestle
      */
     public function SetReturnType($type)
     {
-        self::$__return_type = $type;
+        $this->__return_type = $type;
+    }
+
+    /**
+     * SetError
+     *
+     * @param string error message
+     * @return null
+     */
+    public function SetError($msg)
+    {
+        if (!$this->errors) {
+            $this->errors = array();
+        }
+        $this->errors[] = $msg;
+    }
+
+    /**
+     * _request - try/catch wrapper for _trestle_request
+     *
+     * @param string $message Error Message
+     * @param string $file Error Filename
+     * @param integer $line Error Line Number
+     * @param integer $code Error Code
+     * @return void
+     */
+    private function _check_id($id)
+    {
+        if (strlen($id) === 15) {
+            return true;
+        }
+        $this->SetError('error: invalid id - must be a valid, existing id');
+        return false;
     }
 
     /**
@@ -281,7 +751,7 @@ class Trestle
         curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,10);
         curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
         curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
-        curl_setopt($ch,CURLOPT_USERPWD,self::$__api_key .':'. self::$__api_secret);
+        curl_setopt($ch,CURLOPT_USERPWD,$this->__api_key .':'. $this->__api_secret);
         switch (strtoupper($method)) {
             case 'POST':
                 curl_setopt($ch,CURLOPT_POST,true);
@@ -308,7 +778,7 @@ class Trestle
             $_tmp = json_decode($json,true);
             throw new Exception($_tmp['error']);
         }
-        switch (strtolower(self::$__return_type)) {
+        switch (strtolower($this->__return_type)) {
             case 'array':
                 return json_decode($json,true);
                 break;
