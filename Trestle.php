@@ -35,8 +35,9 @@
 class Trestle
 {
     // Credentials
-    private static $__api_key    = null; // Trestle API Key
-    private static $__api_secret = null; // Trestle API Secret
+    private static $__api_key     = null;   // Trestle API Key
+    private static $__api_secret  = null;   // Trestle API Secret
+    private static $__return_type = 'json'; // Default return type
 
     // Endpoints
     public static $user_service_url   = 'https://www.trestleapp.com/v1/user';
@@ -71,6 +72,9 @@ class Trestle
      */
     public function UserCreate(&$_args)
     {
+        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
+            return 'error: username and/or email required';
+        }
         if (!isset($_args['password']{0})) {
             return 'error: password required';
         }
@@ -121,6 +125,23 @@ class Trestle
     public function UserSearch(&$_args)
     {
         return $this->_request(self::$user_service_url,'GET',$_args);
+    }
+
+    /**
+     * UserLogin - login a user account
+     *
+     * @param string User ID
+     * @return mixed array on success, error message on failure
+     */
+    public function UserLogin(&$_args)
+    {
+        if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
+            return 'error: username and/or email required';
+        }
+        if (!isset($_args['password']{0})) {
+            return 'error: password required';
+        }
+        return $this->_request(self::$user_service_url .'/login','GET');
     }
 
     //-------------------------------
@@ -210,6 +231,17 @@ class Trestle
     //-------------------------------
 
     /**
+     * SetReturnType
+     *
+     * @param string return type of "json", "array", "object"
+     * @return null
+     */
+    public function SetReturnType($type)
+    {
+        self::$__return_type = $type;
+    }
+
+    /**
      * _request - try/catch wrapper for _trestle_request
      *
      * @param string $message Error Message
@@ -275,6 +307,14 @@ class Trestle
         if ($code < 200 || $code > 299) {
             $_tmp = json_decode($json,true);
             throw new Exception($_tmp['error']);
+        }
+        switch (strtolower(self::$__return_type)) {
+            case 'array':
+                return json_decode($json,true);
+                break;
+            case 'object':
+                return json_decode($json);
+                break;
         }
         return $json;
     }
