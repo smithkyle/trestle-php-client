@@ -652,7 +652,7 @@ class Trestle
     }
 
     /**
-     * UserResend - Resend the forgot login email to a user
+     * UserResend - Resend signup activation to user
      *
      * @param string User ID
      * @return mixed array on success, error message on failure
@@ -752,6 +752,11 @@ class Trestle
         curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
         curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
         curl_setopt($ch,CURLOPT_USERPWD,$this->__api_key .':'. $this->__api_secret);
+
+        // Check for file field
+        if (isset($_args['file']) && strpos($_args['file'],'@') !== 0) {
+            $_args['file'] = "@{$_args['file']}";
+        }
         switch (strtoupper($method)) {
             case 'POST':
                 curl_setopt($ch,CURLOPT_POST,true);
