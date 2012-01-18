@@ -764,7 +764,9 @@ class Trestle
                 break;
             case 'GET':
                 curl_setopt($ch,CURLOPT_POST,false);
-                curl_setopt($ch,CURLOPT_URL,$url .'?'. http_build_query($_args));
+                if (isset($_args) && is_array($_args) && count($_args) > 0) {
+                    curl_setopt($ch,CURLOPT_URL,$url .'?'. http_build_query($_args));
+                }
                 break;
             case 'PUT':
                 curl_setopt($ch,CURLOPT_POSTFIELDS,$_args);
