@@ -41,6 +41,7 @@ class Trestle
     // Endpoints
     public static $user_service_url   = 'https://www.trestleapp.com/v1/user';
     public static $object_service_url = 'https://www.trestleapp.com/v1/object';
+    public static $geo_service_url    = 'https://www.trestleapp.com/v1/geo';
 
     /**
      * Constructor
@@ -52,7 +53,7 @@ class Trestle
     public function __construct($api_key = null, $api_secret = null)
     {
         if (!function_exists('curl_init')) {
-            trigger_error('error: PHP curl support is required for Trestle',E_USER_ERROR);
+            trigger_error('error: PHP cURL support is required for Trestle',E_USER_ERROR);
         }
         self::$__api_key    = $api_key;
         self::$__api_secret = $api_secret;
@@ -159,7 +160,7 @@ class Trestle
      * @param string Object ID
      * @return mixed array on success, error message on failure
      */
-    public function ObjectDelete($object_id)
+    public function ObjectDelete($collection,$object_id)
     {
         return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'DELETE');
     }
@@ -171,7 +172,7 @@ class Trestle
      * @param string Object ID
      * @return mixed array on success, error message on failure
      */
-    public function ObjectInfo($object_id)
+    public function ObjectInfo($collection,$object_id)
     {
         return $this->_request(self::$object_service_url ."/{$collection}/{$object_id}",'GET');
     }
@@ -179,12 +180,28 @@ class Trestle
     /**
      * ObjectSearch - Search object accounts
      *
+     * @param string Collection
      * @param array Match parameters
      * @return mixed array on success, error message on failure
      */
-    public function ObjectSearch(&$_args)
+    public function ObjectSearch($collection,&$_args)
     {
         return $this->_request(self::$object_service_url ."/{$collection}",'GET',$_args);
+    }
+
+    //-------------------------------
+    // Geo Service
+    //-------------------------------
+
+    /**
+     * GeoInfo - get info about specific ip/hostname
+     *
+     * @param string IP Address or Hostname
+     * @return mixed array on success, error message on failure
+     */
+    public function GeoInfo($ip)
+    {
+        return $this->_request(self::$geo_service_url ."/{$ip}",'GET');
     }
 
 
