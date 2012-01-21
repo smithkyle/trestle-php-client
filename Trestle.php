@@ -708,13 +708,11 @@ class Trestle
     }
 
     /**
-     * _request - try/catch wrapper for _trestle_request
+     * _check_id
+     * simple validation that a given Trestle ID is the right length
      *
-     * @param string $message Error Message
-     * @param string $file Error Filename
-     * @param integer $line Error Line Number
-     * @param integer $code Error Code
-     * @return void
+     * @param string 15 character unique Trestle ID generated for object
+     * @return bool
      */
     private function _check_id($id)
     {
@@ -726,13 +724,13 @@ class Trestle
     }
 
     /**
-     * _request - try/catch wrapper for _trestle_request
+     * _request
+     * try/catch wrapper for _trestle_request
      *
-     * @param string $message Error Message
-     * @param string $file Error Filename
-     * @param integer $line Error Line Number
-     * @param integer $code Error Code
-     * @return void
+     * @param string $url Url to send request to
+     * @param string $method Method of request (POST/GET/PUT/DELETE)
+     * @param array $_args POST/PUT key => value params
+     * @return string
      */
     private function _request($url,$method,&$_args = false)
     {
@@ -746,7 +744,8 @@ class Trestle
     }
 
     /**
-     * _trestle_request - use cURL to send a request to Trestle
+     * _trestle_request
+     * use cURL to send a request to Trestle
      *
      * @param string $url Url to send request to
      * @param string $method Method of request (POST/GET/PUT/DELETE)
