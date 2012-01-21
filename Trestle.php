@@ -47,11 +47,11 @@ class Trestle
     public $user_service_url    = 'https://www.trestleapp.com/v1/user';
 
     // Error bucket
-    public $errors              = false;
+    private $errors             = false;
 
     // Credentials
-    private $__api_key          = null;
-    private $__api_secret       = null;
+    private $__app_key          = null;
+    private $__app_secret       = null;
 
     // default return format from methods
     private $__return_type      = 'array';
@@ -59,17 +59,17 @@ class Trestle
     /**
      * Constructor
      *
-     * @param string $accessKey Access key
-     * @param string $secretKey Secret key
+     * @param string Trestle APP Key
+     * @param string Trestle App Secret
      * @return void
      */
-    public function __construct($api_key = null, $api_secret = null)
+    public function __construct($app_key = null, $app_secret = null)
     {
         if (!function_exists('curl_init')) {
             trigger_error('error: PHP cURL support is required for Trestle',E_USER_ERROR);
         }
-        $this->__api_key    = $api_key;
-        $this->__api_secret = $api_secret;
+        $this->__app_key    = $app_key;
+        $this->__app_secret = $app_secret;
     }
 
     //-------------------------------
@@ -84,11 +84,11 @@ class Trestle
     public function AudioMasterCreate(&$_args)
     {
         if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
-            $this->SetError('error: audio file is required');
+            $this->_set_error('error: audio file is required');
             return false;
         }
         if (!isset($_args['storage']{0})) {
-            $this->SetError('error: storage parameter required');
+            $this->_set_error('error: storage parameter required');
             return false;
         }
         return $this->_request($this->audio_service_url,'POST',$_args);
@@ -168,19 +168,19 @@ class Trestle
     public function EmailSend(&$_args)
     {
         if (!isset($_args['to']{0}) || !filter_var($_args['to'],FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid To Email Address');
+            $this->_set_error('error: invalid To Email Address');
             return false;
         }
         if (!isset($_args['subject']{0})) {
-            $this->SetError('error: Email subject required');
+            $this->_set_error('error: Email subject required');
             return false;
         }
         if (!isset($_args['message']{0})) {
-            $this->SetError('error: Email message required');
+            $this->_set_error('error: Email message required');
             return false;
         }
         if (isset($_args['from']{0}) || !filter_var($_args['from'],FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid From Email Address');
+            $this->_set_error('error: invalid From Email Address');
             return false;
         }
         return $this->_request($this->email_service_url,'POST',$_args);
@@ -214,11 +214,11 @@ class Trestle
     public function ImageMasterCreate(&$_args)
     {
         if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
-            $this->SetError('error: image file is required');
+            $this->_set_error('error: image file is required');
             return false;
         }
         if (!isset($_args['storage']{0})) {
-            $this->SetError('error: storage parameter required');
+            $this->_set_error('error: storage parameter required');
             return false;
         }
         return $this->_request($this->image_service_url,'POST',$_args);
@@ -324,11 +324,11 @@ class Trestle
     public function MailboxCreate(&$_args)
     {
         if (!isset($_args['mailbox']{0}) || !filter_var($_args['mailbox'],FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid mailbox Email Address');
+            $this->_set_error('error: invalid mailbox Email Address');
             return false;
         }
         if (!isset($_args['password']{2})) {
-            $this->SetError('error: invalid mailbox password - must be at least 3 characters');
+            $this->_set_error('error: invalid mailbox password - must be at least 3 characters');
             return false;
         }
         return $this->_request($this->mailbox_service_url,'POST',$_args);
@@ -343,7 +343,7 @@ class Trestle
     public function MailboxInfo($mailbox)
     {
         if (!isset($mailbox{0}) || !filter_var($mailbox,FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid mailbox Email Address');
+            $this->_set_error('error: invalid mailbox Email Address');
             return false;
         }
         return $this->_request($this->mailbox_service_url ."/{$mailbox}",'GET');
@@ -370,15 +370,15 @@ class Trestle
     public function MailboxUpdate($mailbox,&$_args)
     {
         if (!isset($mailbox{0}) || !filter_var($mailbox,FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid mailbox Email Address');
+            $this->_set_error('error: invalid mailbox Email Address');
             return false;
         }
         if (isset($_args['password']) && !isset($_args['password']{2})) {
-            $this->SetError('error: invalid mailbox password - must be at least 3 characters');
+            $this->_set_error('error: invalid mailbox password - must be at least 3 characters');
             return false;
         }
         if (isset($_args['forward']) && !filter_var($_args['forward'],FILTER_VALIDATE_EMAIL)) {
-            $this->SetError('error: invalid forward Email Address');
+            $this->_set_error('error: invalid forward Email Address');
             return false;
         }
         return $this->_request($this->mailbox_service_url ."/{$mailbox}",'PUT',$_args);
@@ -477,7 +477,7 @@ class Trestle
     public function S3Create(&$_args)
     {
         if (!isset($_args['file']{0}) || !is_file($_args['file'])) {
-            $this->SetError('error: file is required');
+            $this->_set_error('error: file is required');
             return false;
         }
         return $this->_request($this->s3_service_url,'POST',$_args);
@@ -559,11 +559,11 @@ class Trestle
     public function UserCreate(&$_args)
     {
         if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
-            $this->SetError('error: username and/or email required');
+            $this->_set_error('error: username and/or email required');
             return false;
         }
         if (!isset($_args['password']{0})) {
-            $this->SetError('error: password required');
+            $this->_set_error('error: password required');
             return false;
         }
         return $this->_request($this->user_service_url,'POST',$_args);
@@ -626,11 +626,11 @@ class Trestle
     public function UserLogin(&$_args)
     {
         if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
-            $this->SetError('error: username and/or email required');
+            $this->_set_error('error: username and/or email required');
             return false;
         }
         if (!isset($_args['password']{0})) {
-            $this->SetError('error: password required');
+            $this->_set_error('error: password required');
             return false;
         }
         return $this->_request($this->user_service_url .'/login','GET');
@@ -645,7 +645,7 @@ class Trestle
     public function UserForgot(&$_args)
     {
         if (!isset($_args['username']{0}) && !isset($_args['email']{0})) {
-            $this->SetError('error: username and/or email required');
+            $this->_set_error('error: username and/or email required');
             return false;
         }
         return $this->_request($this->user_service_url .'/forgot','POST');
@@ -680,12 +680,26 @@ class Trestle
     }
 
     /**
-     * SetError
+     * GetError
+     * Returns an array of any errors encountered
+     *
+     * @return mixed Returns array on succes, false if no errors
+     */
+    public function GetError()
+    {
+        if ($this->errors) {
+            return $this->errors;
+        }
+        return false;
+    }
+
+    /**
+     * _set_error
      *
      * @param string error message
      * @return null
      */
-    public function SetError($msg)
+    private function _set_error($msg)
     {
         if (!$this->errors) {
             $this->errors = array();
@@ -707,7 +721,7 @@ class Trestle
         if (strlen($id) === 15) {
             return true;
         }
-        $this->SetError('error: invalid id - must be a valid, existing id');
+        $this->_set_error('error: invalid id - must be a valid, existing id');
         return false;
     }
 
@@ -751,7 +765,7 @@ class Trestle
         curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,10);
         curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
         curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
-        curl_setopt($ch,CURLOPT_USERPWD,$this->__api_key .':'. $this->__api_secret);
+        curl_setopt($ch,CURLOPT_USERPWD,$this->__app_key .':'. $this->__app_secret);
 
         // Check for file field
         if (isset($_args['file']) && strpos($_args['file'],'@') !== 0) {
